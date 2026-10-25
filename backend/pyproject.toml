@@ -2,8 +2,47 @@
 name = "document-copilot-backend"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "alembic==1.20.0",
+    "fastapi==0.146.0",
+    "httpx==0.28.1",
+    "openai==3.35.1",
+    "pgvector==0.5.1",
+    "psycopg[binary]==3.3.6",
+    "pydantic==2.14.1",
+    "pydantic-ai==2.57.0",
+    "pydantic-settings==2.16.0",
+    "sqlalchemy==2.1.5",
+    "structlog==26.1.0",
+    "supabase==2.33.0",
+    "uvicorn[standard]==0.54.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
 
 [tool.uv]
 add-bounds = "exact"
 exclude-newer = "7 days"
+
+[dependency-groups]
+dev = [
+    "hatchling==1.32.4",
+    "pytest==9.1.1",
+    "ruff==0.17.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: mark a test as requiring live credentials (deselect with -m 'not integration')"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

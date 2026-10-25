@@ -1,0 +1,27 @@
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    # SPA fallback: route all subpaths to index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Static assets cache headers
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc|woff|woff2)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Health check probe
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+    }
+}

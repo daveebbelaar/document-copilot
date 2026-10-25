@@ -49,11 +49,28 @@ You also need accounts/keys for external services once the app is wired up. Star
 
 ## Running locally
 
-To be added during the build. Setup guides:
+1. **Start the FastAPI Backend:**
+   ```bash
+   cd backend
+   uv sync
+   uv run alembic upgrade head
+   uv run uvicorn app.main:app --port 8000 --reload
+   ```
 
-- [Supabase](docs/guides/supabase-setup.md) — account, hosted project (dashboard or CLI)
-- [Backend](docs/guides/backend-setup.md)
-- [Frontend](docs/guides/frontend-setup.md)
+2. **Start the Vite Frontend:**
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev
+   ```
+
+3. **Open the App:** Navigate to `http://localhost:5173`.
+
+### Guides:
+- [Supabase Setup](docs/guides/supabase-setup.md)
+- [Backend Architecture & Setup](docs/guides/backend-setup.md)
+- [Frontend Development & Guidelines](docs/guides/frontend-setup.md)
+- [Railway Production Deployment](docs/guides/deployment.md)
 
 ## Sample SEC data
 
