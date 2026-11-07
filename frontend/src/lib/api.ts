@@ -71,9 +71,14 @@ export const api = {
     return this.get<Message[]>(`/api/threads/${threadId}/messages`);
   },
 
-  sendMessage(threadId: string, payload: MessageCreatePayload): Promise<Message> {
+  sendMessage(
+    threadId: string,
+    payload: MessageCreatePayload,
+    options?: RequestInit
+  ): Promise<Message> {
     // LLM synthesis turn may take 10-30s on free tiers, so we set a 90s timeout
     return httpRequest<Message>(`/api/threads/${threadId}/messages`, {
+      ...options,
       method: "POST",
       body: JSON.stringify(payload),
       timeoutMs: 90000,

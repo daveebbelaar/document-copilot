@@ -1,5 +1,6 @@
 /**
- * Native fetch HTTP client with Supabase JWT bearer injection and typed ApiError.
+ * Native fetch HTTP client with in-memory Supabase JWT bearer injection,
+ * automatic 401 session refresh and retry, caller abort signal support, and typed ApiError.
  */
 import { env } from "./env";
 import { supabase } from "./supabase";
@@ -30,13 +31,36 @@ export class ApiError extends Error {
 
 interface RequestOptions extends RequestInit {
   timeoutMs?: number;
+  _isRetry?: boolean;
+}
+
+// In-memory token cache to prevent asynchronous storage reads on every HTTP request
+let inMemoryAccessToken: string | null = null;
+
+// Initialize on load and keep synchronized via onAuthStateChange
+supabase.auth.getSession().then(({ data: { session } }) => {
+  inMemoryAccessToken = session?.access_token ?? null;
+}).catch(() => {
+  inMemoryAccessToken = null;
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  inMemoryAccessToken = session?.access_token ?? null;
+});
+
+export function setInMemoryToken(token: string | null): void {
+  inMemoryAccessToken = token;
+}
+
+export function getInMemoryToken(): string | null {
+  return inMemoryAccessToken;
 }
 
 export async function httpRequest<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { timeoutMs = 60000, ...fetchOptions } = options;
+  const { timeoutMs = 60000, _isRetry = false, ...fetchOptions } = options;
 
   // Build full URL
   const baseUrl = env.apiBaseUrl.replace(/\/+$/, "");
@@ -49,33 +73,73 @@ export async function httpRequest<T>(
     headers.set("Accept", "application/json");
   }
 
-  // Inject Supabase session access token if available
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      headers.set("Authorization", `Bearer ${session.access_token}`);
+  // Fast in-memory token lookup with lazy fallback if not populated yet
+  let token = inMemoryAccessToken;
+  if (!token) {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      token = session?.access_token ?? null;
+      inMemoryAccessToken = token;
+    } catch {
+      // Ignore initial session load failure
     }
-  } catch (err) {
-    console.warn("Failed to retrieve auth token for request:", err);
+  }
+
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
   }
 
   if (fetchOptions.body && !(fetchOptions.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const timeoutController = new AbortController();
+  const timeoutId = setTimeout(() => timeoutController.abort(), timeoutMs);
+
+  // Link caller signal if provided
+  let combinedSignal = timeoutController.signal;
+  if (fetchOptions.signal) {
+    const callerSignal = fetchOptions.signal;
+    if (callerSignal.aborted) {
+      clearTimeout(timeoutId);
+      throw new ApiError("Request cancelled", { status: 0, isNetworkError: true });
+    }
+    const combinedController = new AbortController();
+    const onTimeoutAbort = () => combinedController.abort(timeoutController.signal.reason);
+    const onCallerAbort = () => combinedController.abort(callerSignal.reason);
+
+    timeoutController.signal.addEventListener("abort", onTimeoutAbort);
+    callerSignal.addEventListener("abort", onCallerAbort);
+
+    combinedSignal = combinedController.signal;
+  }
 
   try {
     const response = await fetch(url, {
       ...fetchOptions,
       headers,
-      signal: controller.signal,
+      signal: combinedSignal,
     });
 
     clearTimeout(timeoutId);
+
+    // 401 retry: refresh session once and retry
+    if (response.status === 401 && !_isRetry) {
+      try {
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        if (!refreshError && refreshData.session?.access_token) {
+          inMemoryAccessToken = refreshData.session.access_token;
+          return await httpRequest<T>(endpoint, {
+            ...options,
+            _isRetry: true,
+          });
+        }
+      } catch {
+        // Fall through to standard 401 error handling
+      }
+    }
 
     if (response.status === 204) {
       return undefined as unknown as T;
@@ -110,8 +174,14 @@ export async function httpRequest<T>(
       throw err;
     }
 
-    const isAbort = err instanceof DOMException && err.name === "AbortError";
-    const message = isAbort
+    const isAbort =
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (typeof err === "object" && err !== null && "name" in err && err.name === "AbortError");
+
+    const isCallerAborted = fetchOptions.signal?.aborted;
+    const message = isCallerAborted
+      ? "Request cancelled by user"
+      : isAbort
       ? `Request timed out after ${timeoutMs / 1000}s`
       : err instanceof Error
       ? err.message
