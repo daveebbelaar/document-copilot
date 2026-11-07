@@ -1,21 +1,40 @@
+@import "@fontsource/fraunces/latin-400.css";
+@import "@fontsource/fraunces/latin-600.css";
+@import "@fontsource/fraunces/latin-700.css";
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+@import "@fontsource/ibm-plex-sans/latin-500.css";
+@import "@fontsource/ibm-plex-sans/latin-600.css";
+@import "@fontsource/ibm-plex-mono/latin-400.css";
+@import "@fontsource/ibm-plex-mono/latin-500.css";
+@import "@fontsource/ibm-plex-mono/latin-600.css";
 @import "tailwindcss";
 
 @theme {
-  --color-surface-950: #030712;
-  --color-surface-900: #0b0f19;
-  --color-surface-850: #101623;
-  --color-surface-800: #111827;
-  --color-surface-700: #1f2937;
-  --color-surface-600: #374151;
-  --color-surface-500: #4b5563;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 
-  --color-accent: #10b981;
-  --color-accent-hover: #059669;
-  --color-accent-subtle: #064e3b;
-  --color-accent-glow: rgba(16, 185, 129, 0.15);
+  /* OKLCH Slate-tinted neutral tokens */
+  --color-surface-950: oklch(0.13 0.012 250);
+  --color-surface-900: oklch(0.17 0.015 250);
+  --color-surface-850: oklch(0.21 0.018 250);
+  --color-surface-800: oklch(0.25 0.020 250);
+  --color-surface-750: oklch(0.30 0.022 250);
+  --color-surface-700: oklch(0.36 0.022 250);
+  --color-surface-600: oklch(0.46 0.020 250);
+  --color-surface-500: oklch(0.58 0.018 250);
+  --color-surface-400: oklch(0.70 0.014 250);
+  --color-surface-300: oklch(0.82 0.010 250);
+  --color-surface-200: oklch(0.90 0.006 250);
+  --color-surface-100: oklch(0.95 0.004 250);
+  --color-surface-50:  oklch(0.985 0.002 250);
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  /* OKLCH Emerald Accent Tokens ("verified") */
+  --color-accent: oklch(0.68 0.17 155);
+  --color-accent-hover: oklch(0.62 0.18 155);
+  --color-accent-subtle: oklch(0.24 0.07 155);
+  --color-accent-border: oklch(0.38 0.11 155);
+  --color-accent-glow: oklch(0.68 0.17 155 / 0.18);
 }
 
 @layer base {
@@ -26,15 +45,31 @@
     --sal: env(safe-area-inset-left);
   }
 
-  html, body {
-    background-color: #030712;
-    color: #f3f4f6;
+  html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     height: 100%;
     min-height: 100dvh;
     overflow-x: hidden;
+    color-scheme: dark;
+  }
+
+  html.light {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-surface-950);
+    color: oklch(0.96 0.005 250);
+    min-height: 100dvh;
+    overflow-x: hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  html.light body {
+    background-color: oklch(0.985 0.004 250);
+    color: oklch(0.18 0.02 250);
   }
 
   /* Prevent automatic iOS zoom while preserving responsive scaling */
@@ -43,9 +78,15 @@
   }
 
   /* Financial numbers and tickers tabular alignment */
-  .font-mono {
+  .font-mono, [data-tabular] {
     font-feature-settings: "tnum" 1, "zero" 1;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* Accessible focus styling */
+  *:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
 }
 
@@ -60,12 +101,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.2);
+  background: oklch(0.35 0.02 250 / 0.5);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.4);
+  background: oklch(0.50 0.02 250 / 0.8);
+}
+
+/* Selection */
+::selection {
+  background-color: oklch(0.35 0.10 155 / 0.7);
+  color: oklch(0.98 0.01 155);
 }
 
 /* Transitions and animation constraints */
