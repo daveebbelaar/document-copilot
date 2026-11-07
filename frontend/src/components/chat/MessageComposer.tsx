@@ -90,3 +90,4 @@ export const MessageComposer: React.FC<MessageComposerProps> = React.memo(
 );
 
 MessageComposer.displayName = "MessageComposer";
+
