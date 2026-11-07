@@ -63,7 +63,8 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
   const company = meta.company_name || ticker;
   const year = meta.fiscal_year || "";
   const form = meta.form_type || "10-K";
-  const section = meta.section_name || "General Section";
+  const rawSection = meta.section_name || meta.section;
+  const section = typeof rawSection === "string" ? rawSection : "General Section";
   const sourceUrl = meta.source_url || "";
   const score = meta.similarity_score;
 
@@ -75,20 +76,20 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-surface-950/80 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Drawer Container (full width on mobile, 420px on md+) */}
+      {/* Drawer Container (full width on mobile, 440px on md+) */}
       <div
         ref={drawerRef}
-        className="relative z-10 w-full sm:max-w-md md:w-[420px] bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-right duration-200"
+        className="relative z-10 w-full sm:max-w-md md:w-[440px] bg-surface-900 border-l border-surface-800 shadow-2xl flex flex-col h-[100dvh] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-right duration-200"
       >
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/70 select-none">
+        <div className="p-4 border-b border-surface-800 flex items-center justify-between bg-surface-950/80 select-none">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold">
+            <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-accent-glow text-accent border border-accent/40 font-bold">
               [{citation.citation_index}]
             </span>
             <div>
@@ -96,7 +97,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
                 Grounded SEC Citation
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
-                Source Document Verification
+                Verbatim Source Verification
               </span>
             </div>
           </div>
@@ -104,7 +105,7 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="flex items-center justify-center w-11 h-11 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="flex items-center justify-center w-11 h-11 rounded-lg text-slate-400 hover:text-white hover:bg-surface-800 transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             title="Close drawer (Esc)"
             aria-label="Close citation drawer"
           >
@@ -115,21 +116,21 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
           {/* Metadata Card */}
-          <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-3.5 space-y-3">
+          <div className="bg-surface-950 border border-surface-800 rounded-xl p-3.5 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
-                <Building2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                <Building2 className="w-4 h-4 text-accent shrink-0" />
                 <span className="truncate">{company}</span>
               </div>
-              <span className="px-2 py-0.5 rounded bg-slate-800 font-mono text-xs font-bold text-emerald-400 border border-slate-700">
+              <span className="px-2 py-0.5 rounded bg-surface-850 font-mono text-xs font-bold text-accent border border-surface-700">
                 {ticker}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 pt-2 border-t border-slate-800/80">
+            <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 pt-2 border-t border-surface-800">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" />
-                <span>{year ? `FY ${year}` : "Filing"}</span>
+                <span>{year ? `FY ${year}` : "Annual Filing"}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-slate-500" />
@@ -138,18 +139,18 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
             </div>
 
             {section && (
-              <div className="pt-2 border-t border-slate-800/80 text-[11px] text-slate-300">
+              <div className="pt-2 border-t border-surface-800 text-[11px] text-slate-300">
                 <span className="text-slate-500 block mb-1">Section / Item:</span>
-                <span className="font-mono bg-slate-900 px-2 py-1 rounded border border-slate-800 block break-words text-[11px] text-emerald-300">
+                <span className="font-mono bg-surface-900 px-2.5 py-1.5 rounded border border-surface-800 block break-words text-[11px] text-emerald-300">
                   {section}
                 </span>
               </div>
             )}
 
             {score !== undefined && score !== null && (
-              <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1">
-                <span>Hybrid Relevance Score:</span>
-                <span className="font-mono font-semibold text-emerald-400">
+              <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1 font-mono">
+                <span>RRF Relevance Score:</span>
+                <span className="font-semibold text-accent">
                   {(Number(score) * 100).toFixed(1)}%
                 </span>
               </div>
@@ -159,10 +160,10 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
           {/* Verbatim Excerpt */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-slate-300 font-medium">
-              <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+              <BookOpen className="w-3.5 h-3.5 text-accent" />
               <span>Verbatim SEC Passage Excerpt</span>
             </div>
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-200 font-mono text-[11px] leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap selection:bg-emerald-900 selection:text-emerald-100 border-l-2 border-l-emerald-500">
+            <div className="bg-surface-950 border border-surface-800 rounded-xl p-3.5 text-slate-200 font-mono text-[11px] leading-relaxed max-h-80 overflow-y-auto whitespace-pre-wrap selection:bg-accent-glow selection:text-white border-l-2 border-l-accent">
               {citation.excerpt || "No excerpt recorded in citation metadata."}
             </div>
           </div>
@@ -173,13 +174,13 @@ export const CitationDrawer: React.FC<CitationDrawerProps> = ({ citation, onClos
               href={sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-100 font-medium transition border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer"
+              className="flex items-center justify-center gap-2 w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-surface-800 hover:bg-surface-750 text-white font-medium transition border border-surface-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <span>View Full Filing on SEC EDGAR</span>
-              <ExternalLink className="w-4 h-4 text-emerald-400" />
+              <ExternalLink className="w-4 h-4 text-accent" />
             </a>
           ) : (
-            <p className="text-[10px] text-slate-400 text-center font-mono">
+            <p className="text-[10px] text-slate-500 text-center font-mono">
               Filing excerpt verified from local audited index
             </p>
           )}

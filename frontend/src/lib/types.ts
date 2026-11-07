@@ -52,3 +52,41 @@ export interface ThreadUpdatePayload {
 export interface MessageCreatePayload {
   content: string;
 }
+
+export interface PassageSummary {
+  n: number;
+  ticker: string;
+  fiscal_year: number | null;
+  section: string;
+}
+
+export interface AgentTraceStep {
+  id: string;
+  label: string;
+  status: "pending" | "active" | "done" | "error";
+  elapsed_ms?: number;
+  meta?: Record<string, unknown>;
+}
+
+export interface AgentTrace {
+  total_elapsed_ms?: number;
+  retrieved_count?: number;
+  passages?: PassageSummary[];
+  steps?: AgentTraceStep[];
+}
+
+export type StreamEvent =
+  | { type: "status"; step: string; label: string; elapsed_ms: number }
+  | { type: "retrieval_started"; query: string; filters: Record<string, string>; elapsed_ms: number }
+  | {
+      type: "retrieved";
+      vector_hits: number;
+      keyword_hits: number;
+      merged: number;
+      passages: PassageSummary[];
+      elapsed_ms: number;
+    }
+  | { type: "token"; delta: string; elapsed_ms: number }
+  | { type: "validating"; elapsed_ms: number }
+  | { type: "done"; data: Message; elapsed_ms: number }
+  | { type: "error"; message: string; elapsed_ms: number };

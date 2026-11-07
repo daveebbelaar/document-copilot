@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { MessageSquare, Plus, Trash2, ChevronRight, X } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { MessageSquare, Plus, Trash2, ChevronRight, X, Search } from "lucide-react";
 import type { Thread } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
@@ -60,36 +60,69 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
     isOpenMobile = false,
     onCloseMobile,
   }) => {
-    const grouped = useMemo(() => groupThreadsByDate(threads), [threads]);
+    const [searchQuery, setSearchQuery] = useState("");
+
+    const filteredThreads = useMemo(() => {
+      if (!searchQuery.trim()) return threads;
+      const lower = searchQuery.toLowerCase();
+      return threads.filter((t) => (t.title || "Untitled Research").toLowerCase().includes(lower));
+    }, [threads, searchQuery]);
+
+    const grouped = useMemo(() => groupThreadsByDate(filteredThreads), [filteredThreads]);
 
     const content = (
-      <aside className="w-72 sm:w-80 bg-slate-900/90 border-r border-slate-800 flex flex-col h-full select-none">
+      <aside className="w-72 sm:w-80 bg-surface-900 border-r border-surface-800 flex flex-col h-full select-none">
         {/* Header / New Thread */}
-        <div className="p-3 border-b border-slate-800/80 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              onCreateThread();
-              if (onCloseMobile) onCloseMobile();
-            }}
-            aria-label="Create new research thread"
-            className="flex-1 flex items-center justify-center gap-2 min-h-[44px] py-2 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          >
-            <Plus className="w-4 h-4" />
-            <span>New Research Thread</span>
-          </button>
-
-          {/* Close button for mobile drawer */}
-          {onCloseMobile && (
+        <div className="p-3 border-b border-surface-800 flex flex-col gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onCloseMobile}
-              className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-slate-400 hover:text-white transition"
-              aria-label="Close menu"
+              onClick={() => {
+                onCreateThread();
+                if (onCloseMobile) onCloseMobile();
+              }}
+              aria-label="Create new research thread (⌘K)"
+              className="flex-1 flex items-center justify-center gap-2 min-h-[44px] py-2 px-3 rounded-lg bg-accent text-surface-950 text-xs font-semibold hover:bg-accent-hover transition duration-150 shadow-sm cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
-              <X className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
+              <span>New Research Thread</span>
             </button>
-          )}
+
+            {/* Close button for mobile slide-over */}
+            {onCloseMobile && (
+              <button
+                type="button"
+                onClick={onCloseMobile}
+                className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter threads..."
+              aria-label="Search threads"
+              className="w-full bg-surface-950 border border-surface-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-accent transition min-h-[36px]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear thread search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white p-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Scrollable thread list */}
@@ -97,12 +130,12 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
           {isLoading && threads.length === 0 ? (
             <div className="p-3 space-y-2">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-12 rounded-lg bg-slate-800/40 animate-pulse" />
+                <div key={i} className="h-12 rounded-lg bg-surface-800/40 animate-pulse" />
               ))}
             </div>
-          ) : threads.length === 0 ? (
-            <div className="p-6 text-center text-xs text-slate-400">
-              No research threads yet. Start by asking an SEC question.
+          ) : filteredThreads.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-400 font-sans">
+              {searchQuery ? "No matching threads found." : "No research threads yet. Ask an SEC question to begin."}
             </div>
           ) : (
             grouped.map((group) => (
@@ -130,18 +163,18 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                         aria-current={isActive ? "page" : undefined}
                         className={`w-full text-left flex items-center justify-between p-2.5 rounded-lg text-xs cursor-pointer transition min-h-[44px] ${
                           isActive
-                            ? "bg-slate-800 text-white font-medium border border-slate-700/80 shadow-inner"
-                            : "text-slate-300 hover:bg-slate-800/50 hover:text-white"
+                            ? "bg-surface-800 text-white font-medium border border-surface-700/80 shadow-inner"
+                            : "text-slate-300 hover:bg-surface-850 hover:text-white"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0 pr-6">
                           <MessageSquare
                             className={`w-3.5 h-3.5 shrink-0 ${
-                              isActive ? "text-emerald-400" : "text-slate-400"
+                              isActive ? "text-accent" : "text-slate-500"
                             }`}
                           />
                           <div className="truncate">
-                            <p className="truncate">
+                            <p className="truncate font-sans">
                               {thread.title?.trim() || "Untitled Research"}
                             </p>
                             <p className="text-[10px] text-slate-400 font-mono font-normal">
@@ -151,7 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                         </div>
 
                         {isActive && (
-                          <ChevronRight className="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:hidden" />
+                          <ChevronRight className="w-3.5 h-3.5 text-accent shrink-0 group-hover:hidden" />
                         )}
                       </button>
 
@@ -163,7 +196,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
                           onDeleteThread(thread.id);
                         }}
                         aria-label={`Delete thread: ${thread.title || "Untitled Research"}`}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center hover:text-rose-400 text-slate-400 transition cursor-pointer"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 p-2 min-w-[36px] min-h-[36px] flex items-center justify-center hover:text-rose-400 text-slate-500 transition cursor-pointer"
                         title="Delete thread"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -176,12 +209,15 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
           )}
         </div>
 
-        {/* Footer info */}
-        <div className="p-3 border-t border-slate-800/80 text-[11px] text-slate-400 bg-slate-950/60 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          <p className="font-semibold text-slate-300">Coverage:</p>
-          <p className="text-[10px] font-mono text-emerald-400/90 mt-0.5 tracking-wider">
+        {/* Footer info & shortcuts */}
+        <div className="p-3 border-t border-surface-800 text-[11px] text-slate-400 bg-surface-950 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span>⌘K / Ctrl+K New</span>
+            <span>/ Focus Input</span>
+          </div>
+          <div className="text-[10px] font-mono text-accent tracking-wider">
             AAPL • MSFT • NVDA • AMZN • GOOGL
-          </p>
+          </div>
         </div>
       </aside>
     );
@@ -196,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
           <div className="fixed inset-0 z-40 md:hidden flex animate-in fade-in duration-200">
             {/* Backdrop */}
             <div
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+              className="fixed inset-0 bg-surface-950/80 backdrop-blur-sm transition-opacity"
               onClick={onCloseMobile}
               aria-hidden="true"
             />
@@ -212,3 +248,5 @@ export const Sidebar: React.FC<SidebarProps> = React.memo(
 );
 
 Sidebar.displayName = "Sidebar";
+
+export default Sidebar;
