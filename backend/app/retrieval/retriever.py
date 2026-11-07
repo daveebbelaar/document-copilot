@@ -89,6 +89,12 @@ class DocumentRetriever:
             weights=[self.vector_weight, self.fts_weight],
         )
 
+        self.last_retrieval_stats = {
+            "vector_hits": len(vector_candidates),
+            "keyword_hits": len(fts_candidates),
+            "merged": len(fused_results),
+        }
+
         # 4. Map top candidates to SourcePassage schemas
         top_candidates = fused_results[:max_results]
         passages: list[SourcePassage] = []

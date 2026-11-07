@@ -6,6 +6,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.api.schemas import (
@@ -17,7 +18,7 @@ from app.api.schemas import (
 )
 from app.auth.dependencies import get_current_user
 from app.auth.schemas import AuthenticatedUser
-from app.chat.orchestrator import execute_chat_turn
+from app.chat.orchestrator import execute_chat_turn, execute_chat_turn_stream
 from app.database.chats import (
     create_thread,
     delete_thread,
@@ -140,3 +141,42 @@ async def send_message(
         user_content=payload.content,
     )
     return MessageResponse.model_validate(asst_msg)
+
+
+@router.post(
+    "/{thread_id}/messages/stream",
+    status_code=status.HTTP_200_OK,
+)
+async def stream_message(
+    thread_id: UUID,
+    payload: MessageCreateRequest,
+    user: AuthenticatedUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Submit a user message and stream SSE events including agent activity trace and grounded answer.
+    Returns 404 if thread not found.
+    """
+    thread = get_thread_by_id(db, thread_id=thread_id, user_id=user.id)
+    if thread is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Thread not found",
+        )
+
+    event_generator = execute_chat_turn_stream(
+        db=db,
+        user=user,
+        thread_id=thread_id,
+        user_content=payload.content,
+    )
+
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
