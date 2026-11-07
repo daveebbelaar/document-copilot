@@ -1,28 +1,58 @@
 @import "tailwindcss";
 
+@theme {
+  --color-surface-950: #030712;
+  --color-surface-900: #0b0f19;
+  --color-surface-850: #101623;
+  --color-surface-800: #111827;
+  --color-surface-700: #1f2937;
+  --color-surface-600: #374151;
+  --color-surface-500: #4b5563;
+
+  --color-accent: #10b981;
+  --color-accent-hover: #059669;
+  --color-accent-subtle: #064e3b;
+  --color-accent-glow: rgba(16, 185, 129, 0.15);
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 @layer base {
   :root {
-    --color-surface-900: #0b0f19;
-    --color-surface-800: #111827;
-    --color-surface-700: #1f2937;
-    --color-surface-600: #374151;
-    --color-accent: #10b981;
-    --color-accent-hover: #059669;
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   }
 
-  body {
+  html, body {
     background-color: #030712;
     color: #f3f4f6;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Prevent automatic iOS zoom while preserving responsive scaling */
+  input, textarea, select {
+    font-size: 16px;
+  }
+
+  /* Financial numbers and tickers tabular alignment */
+  .font-mono {
+    font-feature-settings: "tnum" 1, "zero" 1;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-/* Custom scrollbars for chat pane and sidebar */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -36,4 +66,14 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
+}
+
+/* Transitions and animation constraints */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
